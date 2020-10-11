@@ -32,7 +32,6 @@ class TicTacToe():
         6 7 8
 
         """
-
         valid_combinations = [(0, 1, 2), (3, 4, 5), (6, 7, 8),
                               (0, 3, 6), (1, 4, 7), (2, 5, 8),
                               (0, 4, 8), (2, 4, 6)]
@@ -41,10 +40,7 @@ class TicTacToe():
             if (not np.isnan(curr_state[combination[0]])) and (not np.isnan(curr_state[combination[1]])) and (not np.isnan(curr_state[combination[2]])):
                 if(curr_state[combination[0]] + curr_state[combination[1]] + curr_state[combination[2]]) == 15:
                     return True
-                else:
-                    return False
-            else:
-                return False
+        return False;
 
     def is_terminal(self, curr_state):
         # Terminal state could be winning state or when the board is filled up
@@ -87,8 +83,10 @@ class TicTacToe():
         Example: Input state- [1, 2, 3, 4, nan, nan, nan, nan, nan], action- [7, 9] or [position, value]
         Output = [1, 2, 3, 4, nan, nan, nan, 9, nan]
         """
-        curr_state[curr_action[0]] = curr_action[1]
-        return curr_state
+        temp_state = [s for s in curr_state]
+        temp_state[curr_action[0]] = curr_action[1]
+
+        return temp_state
 
     def step(self, curr_state, curr_action):
         """Takes current state and action and returns the next state, reward and whether the state is terminal. Hint: First, check the board position after
@@ -96,30 +94,32 @@ class TicTacToe():
         Example: Input state- [1, 2, 3, 4, nan, nan, nan, nan, nan], action- [7, 9] or [position, value]
         Output = ([1, 2, 3, 4, nan, nan, nan, 9, nan], -1, False)"""
 
-        next_state = state_transition(curr_state, curr_action)
-        terminal_state = is_terminal(next_state)
+        next_state = self.state_transition(curr_state, curr_action)
+        is_game_finished, game_outcome = self.is_terminal(next_state)
 
-        if terminal_state[0]:
-            if terminal_state[1] == 'Win':
+        if is_game_finished:
+            if game_outcome == 'Win':
                 reward = 10
             else:
                 reward = 0
+        else:
+            _, env_actions = self.action_space(next_state)
 
-            return next_state, reward, True
+            env_action = random.choice(list(env_actions))
 
-        _, env_actions = action_space(next_state)
+            next_state = self.state_transition(next_state, env_action)
 
-        env_action = random.choice(list(env_actions))
-        next_state = state_transition(next_state, env_action)
+            is_game_finished, game_outcome = self.is_terminal(next_state)
 
-        if terminal_state[0]:
-            if terminal_state[1] == 'Win':
-                reward = -10
+            if is_game_finished:
+                if game_outcome == 'Win':
+                    reward = -10
+                else:
+                    reward = 0
             else:
-                reward = 0
-            return next_state, reward, True
+                reward = -1
 
-        return next_state, -1, False
+        return next_state, reward, is_game_finished
 
     def reset(self):
         return self.state
